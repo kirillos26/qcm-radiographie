@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Questionnaire — QCM & QRO</title>
+  <style>
+    :root{
+      --border:#e5e7eb; --muted:#6b7280; --bg:#ffffff; --soft:#f9fafb;
+      --ok:#16a34a; --ko:#dc2626; --ink:#111827;
+    }
+    body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:24px; line-height:1.45; color:var(--ink); background:var(--bg);
+    }
+    header{ max-width:980px; margin:0 auto 14px auto; }
+    h1{ font-size:1.45rem; margin:0 0 8px 0; display:flex; align-items:center; gap:10px; }
+    .sub{ margin:0 0 14px 0; color:var(--muted); }
+    .bar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    button{
+      padding:9px 12px; border:1px solid #9ca3af; border-radius:12px;
+      background:var(--soft); cursor:pointer;
+    }
+    button.primary{ background:#111827; color:#fff; border-color:#111827; }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
+    .meta{ margin-left:auto; color:var(--muted); font-size:.95rem; }
+
+    main{ max-width:980px; margin:14px auto 44px auto; display:flex; flex-direction:column; gap:14px; }
+    .card{
+      border:1px solid var(--border); border-radius:16px; padding:14px 14px 12px 14px;
+      background:#fff;
+    }
+    .topline{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .title{ margin:0; font-size:1.05rem; display:flex; align-items:center; gap:8px; }
+    .pill{
+      display:inline-block; font-size:.82rem; padding:2px 9px; border:1px solid var(--border);
+      border-radius:999px; color:var(--muted); white-space:nowrap;
+    }
+    .prompt{ margin:8px 0 10px 0; }
+    .choices{ display:flex; flex-direction:column; gap:8px; margin:10px 0 10px 0; }
+    label.choice{ display:flex; gap:10px; align-items:flex-start; }
+    input[type="checkbox"], input[type="radio"]{ margin-top:3px; transform:scale(1.1); }
+    textarea{
+      width:100%; min-height:92px; resize:vertical; padding:10px;
+      border-radius:12px; border:1px solid var(--border); font:inherit;
+    }
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 6px 0; }
+    .feedback{
+      margin-top:10px; padding:10px 12px; border-radius:14px; border:1px solid var(--border);
+      background:#fafafa; white-space:pre-wrap;
+    }
+    .feedback.ok{ border-color:#86efac; background:#f0fdf4; }
+    .feedback.ko{ border-color:#fca5a5; background:#fef2f2; }
+    .muted{ color:var(--muted); }
+    .sep{ height:1px; background:var(--border); margin:10px 0; }
+
+    /* Icônes inline */
+    .ico{ width:18px; height:18px; display:inline-block; vertical-align:-3px; }
+    .ico svg{ width:18px; height:18px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>
+    <span class="ico" aria-hidden="true">
+      <!-- petit pictogramme "quiz" -->
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M7 7h10M7 12h7M7 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
+              stroke="currentColor" stroke-width="2"/>
+      </svg>
+    </span>
+    Questionnaire — QCM & QRO
+  </h1>
+
+  <div class="bar">
+    <button class="primary" id="btnNew">Nouveau tirage</button>
+    <span class="meta" id="meta"></span>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<script>
+/** =========================
+ *  1) BANQUE DE QUESTIONS (à remplir ensuite depuis tes PDF)
+ *  ========================= */
+// =======================
+// QUESTION_BANK — PARTIE 1
+// Module 3 + Physio/Patho (semaines 1-2)
+// solutionText = explication (sans lettres, sans "Bonne(s) réponse(s)")
+// =======================
+
+const QUESTION_BANK = [
+
+  {
+    id: "radio_1",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "En incidence PA du thorax, pourquoi demande-t-on une inspiration maximale ?",
+    choices: [
+      { text: "Augmenter la densité pulmonaire", correct: false },
+      { text: "Abaisser le diaphragme et mieux déployer les champs pulmonaires", correct: true },
+      { text: "Réduire la taille apparente du cœur", correct: false },
+      { text: "Diminuer la dose reçue par le patient", correct: false }
+    ],
+    solutionText:
+      "Une inspiration profonde abaisse le diaphragme et permet une meilleure expansion des poumons, améliorant l’analyse des structures pulmonaires."
+  },
+
+  {
+    id: "radio_2",
+    type: "QCM",
+    mode: "multi",
+    icon: "🩻",
+    prompt: "Quels critères indiquent un bon positionnement en radiographie thoracique PA ?",
+    choices: [
+      { text: "Clavicules symétriques par rapport aux apophyses épineuses", correct: true },
+      { text: "Scapulas projetées sur les champs pulmonaires", correct: false },
+      { text: "Inspiration suffisante avec visualisation d’au moins 10 arcs costaux postérieurs", correct: true },
+      { text: "Rotation du patient vers la droite", correct: false }
+    ],
+    solutionText:
+      "L’absence de rotation (clavicules symétriques) et une inspiration suffisante sont des critères majeurs de qualité en thorax PA."
+  },
+
+  {
+    id: "radio_3",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "Pourquoi privilégie-t-on une incidence PA plutôt que AP pour le thorax chez un patient debout ?",
+    choices: [
+      { text: "Réduire l’agrandissement du cœur", correct: true },
+      { text: "Augmenter la visibilité des côtes postérieures", correct: false },
+      { text: "Diminuer le contraste pulmonaire", correct: false },
+      { text: "Faciliter la visualisation du médiastin supérieur", correct: false }
+    ],
+    solutionText:
+      "L’incidence PA limite l’agrandissement géométrique du cœur car celui-ci est plus proche du détecteur."
+  },
+
+  {
+    id: "radio_4",
+    type: "QRO",
+    icon: "🩻",
+    prompt: "Expliquer l’intérêt d’une distance foyer-détecteur élevée (≈ 180 cm) en radiographie thoracique.",
+    modelAnswer:
+      "Une grande distance foyer-détecteur réduit l’agrandissement et les distorsions, améliorant la fidélité des dimensions, notamment pour l’évaluation cardiaque."
+  },
+
+  {
+    id: "radio_5",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "En radiographie du genou de face, quelle structure doit être centrée sur le détecteur ?",
+    choices: [
+      { text: "La rotule uniquement", correct: false },
+      { text: "L’interligne fémoro-tibial", correct: true },
+      { text: "Le condyle fémoral latéral", correct: false },
+      { text: "La tubérosité tibiale", correct: false }
+    ],
+    solutionText:
+      "Le centrage sur l’interligne articulaire permet une évaluation correcte de l’espace articulaire et des structures osseuses."
+  },
+
+  {
+    id: "radio_6",
+    type: "QCM",
+    mode: "multi",
+    icon: "🩻",
+    prompt: "Quels éléments influencent la netteté géométrique d’une image radiographique ?",
+    choices: [
+      { text: "Taille du foyer", correct: true },
+      { text: "Distance objet-détecteur", correct: true },
+      { text: "Distance foyer-détecteur", correct: true },
+      { text: "Couleur du détecteur", correct: false }
+    ],
+    solutionText:
+      "La netteté dépend des paramètres géométriques : taille du foyer, distances foyer-détecteur et objet-détecteur."
+  },
+
+  {
+    id: "radio_7",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "Quelle est la position recommandée pour une incidence latérale du rachis lombaire ?",
+    choices: [
+      { text: "Décubitus dorsal", correct: false },
+      { text: "Décubitus latéral avec genoux fléchis", correct: true },
+      { text: "Procubitus", correct: false },
+      { text: "Position debout bras levés", correct: false }
+    ],
+    solutionText:
+      "Le décubitus latéral avec flexion des membres inférieurs réduit la lordose lombaire et améliore l’alignement."
+  },
+
+  {
+    id: "radio_8",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "Pourquoi demande-t-on l’immobilité du patient pendant l’exposition ?",
+    choices: [
+      { text: "Augmenter le contraste", correct: false },
+      { text: "Éviter le flou de mouvement", correct: true },
+      { text: "Réduire la dose", correct: false },
+      { text: "Améliorer la pénétration des rayons", correct: false }
+    ],
+    solutionText:
+      "Le mouvement pendant l’exposition entraîne un flou cinétique qui dégrade la résolution spatiale."
+  },
+
+  {
+    id: "radio_9",
+    type: "QRO",
+    icon: "🩻",
+    prompt: "Pourquoi utilise-t-on une grille anti-diffusante pour certaines radiographies ?",
+    modelAnswer:
+      "La grille réduit le rayonnement diffusé, améliore le contraste de l’image mais nécessite généralement une augmentation de l’exposition."
+  },
+
+  {
+    id: "radio_10",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "En incidence AP de l’épaule, quelle structure doit être dégagée pour une bonne analyse ?",
+    choices: [
+      { text: "L’articulation acromio-claviculaire", correct: false },
+      { text: "L’espace gléno-huméral", correct: true },
+      { text: "La clavicule médiale", correct: false },
+      { text: "La scapula entière", correct: false }
+    ],
+    solutionText:
+      "Le bon positionnement vise à visualiser clairement l’interligne gléno-huméral pour évaluer congruence et lésions."
+  },
+
+  {
+    id: "radio_11",
+    type: "QCM",
+    mode: "multi",
+    icon: "🩻",
+    prompt: "Quels facteurs augmentent la dose reçue par le patient ?",
+    choices: [
+      { text: "Augmentation du mAs", correct: true },
+      { text: "Répétition d’examens", correct: true },
+      { text: "Collimation adéquate", correct: false },
+      { text: "Distance foyer-peau réduite", correct: true }
+    ],
+    solutionText:
+      "Une augmentation du mAs, des répétitions et une distance plus faible augmentent la dose absorbée."
+  },
+
+  {
+    id: "radio_12",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "Quel est l’objectif principal de la collimation ?",
+    choices: [
+      { text: "Augmenter la résolution", correct: false },
+      { text: "Limiter le champ irradié et réduire la diffusion", correct: true },
+      { text: "Augmenter la dose", correct: false },
+      { text: "Modifier la taille du foyer", correct: false }
+    ],
+    solutionText:
+      "La collimation réduit la zone irradiée, diminue le diffusé et améliore le contraste."
+  },
+
+  {
+    id: "radio_13",
+    type: "QRO",
+    icon: "🩻",
+    prompt: "Expliquer pourquoi une rotation du patient fausse l’interprétation d’une radiographie thoracique.",
+    modelAnswer:
+      "La rotation modifie les rapports anatomiques apparents (clavicules, médiastin, cœur) et peut simuler ou masquer des pathologies."
+  },
+
+  {
+    id: "radio_14",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "En radiographie du bassin de face, quelle est la position des membres inférieurs recommandée ?",
+    choices: [
+      { text: "Rotation interne d’environ 15°", correct: true },
+      { text: "Rotation externe maximale", correct: false },
+      { text: "Flexion des genoux", correct: false },
+      { text: "Abduction des hanches", correct: false }
+    ],
+    solutionText:
+      "La rotation interne aligne les cols fémoraux parallèlement au détecteur pour une meilleure visualisation."
+  },
+
+  {
+    id: "radio_15",
+    type: "QCM",
+    mode: "multi",
+    icon: "🩻",
+    prompt: "Quels éléments participent à la radioprotection du patient ?",
+    choices: [
+      { text: "Utilisation de tabliers plombés", correct: true },
+      { text: "Collimation adaptée", correct: true },
+      { text: "Augmentation systématique du kV", correct: false },
+      { text: "Optimisation des paramètres d’exposition", correct: true }
+    ],
+    solutionText:
+      "La radioprotection repose sur la limitation du champ, l’optimisation des paramètres et l’utilisation d’écrans plombés."
+  },
+
+  {
+    id: "radio_16",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "Quel paramètre influence principalement le contraste radiographique ?",
+    choices: [
+      { text: "kV", correct: true },
+      { text: "mAs", correct: false },
+      { text: "Distance foyer-détecteur", correct: false },
+      { text: "Temps d’exposition uniquement", correct: false }
+    ],
+    solutionText:
+      "Le kilovoltage (kV) détermine l’énergie du faisceau et influence fortement le contraste de l’image."
+  },
+
+  {
+    id: "radio_17",
+    type: "QRO",
+    icon: "🩻",
+    prompt: "Pourquoi demande-t-on parfois une expiration en radiographie thoracique ?",
+    modelAnswer:
+      "L’expiration peut aider à mettre en évidence certains pneumothorax ou anomalies de mobilité diaphragmatique."
+  },
+
+  {
+    id: "radio_18",
+    type: "QCM",
+    mode: "single",
+    icon: "🩻",
+    prompt: "Quelle est la conséquence principale d’une distance objet-détecteur trop grande ?",
+    choices: [
+      { text: "Diminution du contraste", correct: false },
+      { text: "Agrandissement et flou géométrique", correct: true },
+      { text: "Réduction de la dose", correct: false },
+      { text: "Augmentation de la netteté", correct: false }
+    ],
+    solutionText:
+      "Une distance objet-détecteur élevée augmente l’agrandissement et la pénombre géométrique."
+  },
+
+  {
+    id: "radio_19",
+    type: "QCM",
+    mode: "multi",
+    icon: "🩻",
+    prompt: "Quels critères indiquent une bonne incidence latérale du thorax ?",
+    choices: [
+      { text: "Superposition des arcs costaux postérieurs", correct: true },
+      { text: "Bras élevés pour dégager les champs pulmonaires", correct: true },
+      { text: "Rotation du bassin", correct: false },
+      { text: "Inspiration profonde", correct: true }
+    ],
+    solutionText:
+      "Une bonne latérale thoracique nécessite absence de rotation, bras dégagés et inspiration suffisante."
+  },
+
+  {
+    id: "radio_20",
+    type: "QRO",
+    icon: "🩻",
+    prompt: "Expliquer l’intérêt clinique de réaliser deux incidences orthogonales en radiographie.",
+    modelAnswer:
+      "Deux incidences perpendiculaires permettent de localiser précisément une lésion dans l’espace et d’éviter les superpositions trompeuses."
+  }
+
+];
+
+
+
+/** =========================
+ *  2) UTILS
+ *  ========================= */
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+function escapeHtml(s){
+  if(s==null) return "";
+  return String(s)
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function sameSet(a,b){
+  const A=[...a].sort((x,y)=>x-y), B=[...b].sort((x,y)=>x-y);
+  if(A.length!==B.length) return false;
+  return A.every((v,i)=>v===B[i]);
+}
+
+/** =========================
+ *  3) ÉTAT + GÉNÉRATION
+ *  ========================= */
+let state = { questions: [] };
+
+function buildAttempt(){
+  const q = deepClone(QUESTION_BANK);
+
+  // Random questions
+  shuffle(q);
+
+  // Random choices in each QCM
+  for(const item of q){
+    if(item.type==="QCM" && Array.isArray(item.choices)) shuffle(item.choices);
+  }
+
+  state.questions = q;
+  render();
+}
+
+function metaText(){
+  const total=state.questions.length;
+  const nQCM=state.questions.filter(x=>x.type==="QCM").length;
+  const nQRO=state.questions.filter(x=>x.type==="QRO").length;
+  return `${total} exercices · ${nQCM} QCM · ${nQRO} QRO`;
+}
+
+/** =========================
+ *  4) RENDU
+ *  ========================= */
+function render(){
+  document.getElementById("meta").textContent = metaText();
+
+  const app=document.getElementById("app");
+  app.innerHTML="";
+
+  state.questions.forEach((q, idx) => {
+    const exoNum = idx+1;
+
+    const card=document.createElement("section");
+    card.className="card";
+    card.dataset.qid=q.id;
+
+    // Header
+    const modeLabel = q.type==="QCM"
+      ? (q.mode==="single" ? "QCM · 1 réponse" : "QCM · multi réponses")
+      : "QRO";
+    const icon = q.icon || (q.type==="QCM" ? "🧩" : "✍️");
+
+    card.innerHTML = `
+      <div class="topline">
+        <h3 class="title">${escapeHtml(icon)} Exercice ${exoNum}</h3>
+        <span class="pill">${modeLabel}</span>
+      </div>
+      <div class="prompt">${escapeHtml(q.prompt)}</div>
+    `;
+
+    // Body
+    if(q.type==="QCM"){
+      const list=document.createElement("div");
+      list.className="choices";
+
+      const groupName = `grp_${q.id}`;
+      q.choices.forEach((c, cidx) => {
+        const letter = String.fromCharCode(65 + cidx);
+        const inputId = `${q.id}_${cidx}`;
+
+        const row=document.createElement("label");
+        row.className="choice";
+
+        const input=document.createElement("input");
+        input.type = (q.mode==="single") ? "radio" : "checkbox";
+        input.name = groupName;
+        input.id = inputId;
+        input.dataset.correct = String(!!c.correct);
+
+        const span=document.createElement("span");
+        span.innerHTML = `<b>${letter}.</b> ${escapeHtml(c.text)}`;
+
+        row.appendChild(input);
+        row.appendChild(span);
+        list.appendChild(row);
+      });
+
+      card.appendChild(list);
+
+      // Controls: submit per QCM
+      const controls=document.createElement("div");
+      controls.className="controls";
+
+      const btn=document.createElement("button");
+      btn.className="primary";
+      btn.textContent="Soumettre";
+      btn.addEventListener("click", () => submitOneQCM(q.id));
+
+      const btnReset=document.createElement("button");
+      btnReset.textContent="Réinitialiser";
+      btnReset.addEventListener("click", () => resetOne(q.id));
+
+      controls.appendChild(btn);
+      controls.appendChild(btnReset);
+      card.appendChild(controls);
+    }
+
+    if(q.type==="QRO"){
+      const ta=document.createElement("textarea");
+      ta.placeholder="Écris ta réponse ici…";
+      ta.id = `ta_${q.id}`;
+      card.appendChild(ta);
+
+      const controls=document.createElement("div");
+      controls.className="controls";
+
+      const btn=document.createElement("button");
+      btn.className="primary";
+      btn.textContent="Soumettre";
+      btn.addEventListener("click", () => submitOneQRO(q.id));
+
+      const btnReset=document.createElement("button");
+      btnReset.textContent="Réinitialiser";
+      btnReset.addEventListener("click", () => resetOne(q.id));
+
+      controls.appendChild(btn);
+      controls.appendChild(btnReset);
+      card.appendChild(controls);
+    }
+
+    // Feedback placeholder
+    const fb=document.createElement("div");
+    fb.className="feedback";
+    fb.style.display="none";
+    fb.id = `fb_${q.id}`;
+    card.appendChild(fb);
+
+    app.appendChild(card);
+  });
+}
+
+/** =========================
+ *  5) ACTIONS : QCM / QRO
+ *  ========================= */
+function submitOneQCM(qid){
+  const q = state.questions.find(x => x.id===qid);
+  if(!q) return;
+
+  const card = document.querySelector(`[data-qid="${qid}"]`);
+  const inputs = Array.from(card.querySelectorAll("input"));
+
+  // Gather chosen and correct
+  const chosen = inputs.map((el, idx)=>({idx, checked:el.checked}))
+                       .filter(x=>x.checked).map(x=>x.idx);
+  const correctIdx = inputs.map((el, idx)=>({idx, correct:el.dataset.correct==="true"}))
+                           .filter(x=>x.correct).map(x=>x.idx);
+
+  const ok = sameSet(chosen, correctIdx);
+
+  // Disable
+  inputs.forEach(el => el.disabled = true);
+  card.querySelectorAll("button").forEach(b => { if(b.textContent==="Soumettre") b.disabled = true; });
+
+  // Feedback
+  const fb = document.getElementById(`fb_${qid}`);
+  fb.style.display="block";
+  fb.classList.remove("ok","ko");
+  fb.classList.add(ok ? "ok" : "ko");
+
+  const correctLetters = correctIdx.map(i => String.fromCharCode(65+i)).join(", ") || "—";
+  fb.textContent =
+    (ok ? "✅ Bonne réponse." : "❌ Mauvaise réponse.") + "\n\n" +
+    `Bonne(s) réponse(s) : ${correctLetters}\n` +
+    (q.solutionText ? q.solutionText : "");
+}
+
+function submitOneQRO(qid){
+  const q = state.questions.find(x => x.id===qid);
+  if(!q) return;
+
+  const card = document.querySelector(`[data-qid="${qid}"]`);
+  const ta = card.querySelector("textarea");
+  const user = (ta.value || "").trim();
+
+  ta.disabled = true;
+  card.querySelectorAll("button").forEach(b => { if(b.textContent==="Soumettre") b.disabled = true; });
+
+  const fb = document.getElementById(`fb_${qid}`);
+  fb.style.display="block";
+  fb.classList.remove("ok","ko");
+
+  fb.textContent =
+    "✅ Réponse enregistrée.\n\n" +
+    `Ta réponse : ${user ? user : "(vide)"}\n\n` +
+    `Réponse proposée : ${q.modelAnswer ? q.modelAnswer : "—"}`;
+}
+
+function resetOne(qid){
+  const card = document.querySelector(`[data-qid="${qid}"]`);
+  if(!card) return;
+
+  // reset inputs/textarea
+  card.querySelectorAll("input").forEach(el => { el.checked=false; el.disabled=false; });
+  card.querySelectorAll("textarea").forEach(el => { el.value=""; el.disabled=false; });
+
+  // reset feedback
+  const fb = document.getElementById(`fb_${qid}`);
+  if(fb){
+    fb.style.display="none";
+    fb.textContent="";
+    fb.classList.remove("ok","ko");
+  }
+
+  // re-enable submit button
+  card.querySelectorAll("button").forEach(b => b.disabled=false);
+}
+
+/** =========================
+ *  6) GLOBAL BUTTON
+ *  ========================= */
+document.getElementById("btnNew").addEventListener("click", () => buildAttempt());
+
+/** =========================
+ *  7) INIT (randomize on load)
+ *  ========================= */
+buildAttempt();
+</script>
+</body>
+</html>
